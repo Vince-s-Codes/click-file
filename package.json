@@ -2,7 +2,7 @@
   "name": "click-file",
   "displayName": "click-file",
   "description": "Highlight file names in file and make it clickable to open the file",
-  "publisher": "vincescodes",
+  "publisher": "VincesCodes",
   "version": "1.0.0",
   "engines": {
     "vscode": "^1.85.0"
@@ -47,6 +47,14 @@
     "onStartupFinished"
   ],
   "icon": "./media/icon.png",
+  "homepage": "https://github.com/Vince-s-Codes/click-file#readme",
+  "bugs": {
+    "url": "https://github.com/Vince-s-Codes/click-file/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vince-s-Codes/click-file.git"
+  },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
