@@ -41,6 +41,8 @@ export function activate(context: vscode.ExtensionContext) {
 
   const codeLensProvider = vscode.languages.registerCodeLensProvider('*', {
     provideCodeLenses(document: vscode.TextDocument): vscode.CodeLens[] {
+      const decorationRanges: vscode.Range[] = [];
+      const editor = vscode.window.activeTextEditor;
       const lenses: vscode.CodeLens[] = [];
       let match: RegExpExecArray | null;
       const references = getReferences(document);
@@ -140,11 +142,7 @@ export function activate(context: vscode.ExtensionContext) {
                   });
                 }
                 if (lenses.length !== count) {
-                  const editor = vscode.window.activeTextEditor;
-
-                  if (editor && editor.document === document) {
-                    editor.setDecorations(underlineDecoration, [range]);
-                  }
+                  decorationRanges.push(range);
                 }
               }
             }
@@ -152,6 +150,9 @@ export function activate(context: vscode.ExtensionContext) {
             console.error('click-file::', error);
           }
         });
+      }
+      if (editor && editor.document === document) {
+        editor.setDecorations(underlineDecoration, decorationRanges);
       }
       return lenses;
     }

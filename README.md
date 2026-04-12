@@ -2,6 +2,8 @@
 
 This extension highlights file paths in your code and makes them clickable. You can open files directly in VS Code or use an external tool.
 
+![Example](media/example.png)
+
 ## Features
 
 - **Clickable File Paths**: File paths in your code are highlighted and clickable.
@@ -17,10 +19,10 @@ Configure external tools to open files. Example:
 ```json
 "click-file.externalFiles": [
   {
-    "tool": "logexplorer",
-    "command": "~/bin/logexplorer %f",
-    "types": ["log"],
-    "patterns": ["*.log"]
+    "tool": "EOG",
+    "command": "/usr/bin/eog %f",
+    "types": [],
+    "patterns": ["*.png"]
   }
 ]
 ```
