@@ -2,13 +2,33 @@
 
 This extension highlights file paths in your code and makes them clickable. You can open files directly in VS Code or use an external tool.
 
-![Example](media/example.png)
-
 ## Features
 
-- **Clickable File Paths**: File paths in your code are highlighted and clickable.
-- **Open in VS Code**: Click on a file path to open it directly in VS Code.
-- **Open with External Tool**: Configure external tools to open files with a right-click context menu.
+This extension detects file paths in your code, underlines them, and provides an **"Open"** button via CodeLens. It supports the following file path formats:
+
+- Absolute paths: `/path/to/file.txt`
+- Relative paths: `./relative/path/file.txt` or `../parent/path/file.txt`
+- Paths with environment variables: `$HOME/file.txt` or `~/file.txt`
+- Paths with line numbers: `file.txt:42`, `file.txt@42`, `file.txt#42`, `file.txt,42`, or `file.txt|42`
+- Paths with line and column numbers: `file.txt:42:1`, `file.txt@42@1`, `file.txt#42#1`, `file.txt,42,1`, or `file.txt|42|1`
+
+![Example](media/example.png)
+
+### Core Functionality
+- **File Path Detection**: Detects and underlines file paths in your code for visual feedback.
+- **CodeLens Actions**: Shows an **"Open"** button above detected file paths. Click the button to:
+  - Open the file in VS Code (at the specified line/column, if provided).
+  - Open the file with an external tool (e.g., image viewer, editor).
+- **Path Remapping**: Remap parts of directory paths to other locations (e.g., map `~` to `/home/user` or `/old/path` to `/new/path`).
+
+### Configuration
+The extension provides several configuration options to customize its behavior:
+
+- **`click-file.externalFiles`**: Configure external tools to open specific file types or patterns.
+- **`click-file.externalDirectories`**: Configure external tools to open directories.
+- **`click-file.remapDirectories`**: Remap directory paths to other locations.
+
+See the [Extension Settings](#extension-settings) section for more details.
 
 ## Extension Settings
 
@@ -56,10 +76,3 @@ Remap part of a directory path with another directory path. Example:
 ```
 - Keys: Directory paths to match (supports `~` for home directory and environment variables like `$HOME`).
 - Values: Array of replacement directory paths.
-
-### 1.0.0
-
-- Initial release
-- Added clickable file paths
-- Added support for opening files in VS Code
-- Added support for opening files with external tools
