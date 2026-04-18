@@ -176,6 +176,15 @@ export function resolveFile(filePath: string, references: References): string[] 
   return files;
 }
 
+/**
+ * Parses a regex match to extract file path, line number, and column number.
+ * - Handles cases where line and column numbers are embedded in the file path (e.g., `file(10)` or `file(10,5)`).
+ * - Adjusts the file path by removing embedded line/column numbers.
+ * - Returns the cleaned file path, line number, and column number.
+ *
+ * @param match The regex match array containing the file path, line number, and column number.
+ * @returns An object with the cleaned file path, line number, and column number.
+ */
 export function resolveMatch(match: RegExpExecArray): {filePath: string, lineNumber: string | null, columnNumber: string | null} {
   let filePath = match[1];
   let lineNumber = match[2] || null;
