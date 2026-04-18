@@ -79,7 +79,7 @@ export function getDirectoryTitle(directory: string, tool?: string): string {
  * @param tool Optional tool name to include in the title.
  * @returns A formatted title string.
  */
-export function getFileTitle(file: string, lineNumber?: string, columnNumber?: string, tool?: string): string {
+export function getFileTitle(file: string, lineNumber?: string|null, columnNumber?: string|null, tool?: string): string {
   let title: string = `Open '${file}' file`;
 
   if (lineNumber) {
@@ -103,9 +103,9 @@ export function getFileTitle(file: string, lineNumber?: string, columnNumber?: s
  * @returns An object containing directories, file path, and a regex pattern for matching references.
  */
 export function getReferences(document: vscode.TextDocument): References {
-  const columnNumberPattern = '(?:[,@#:\|](\\d+)|)';
+  const columnNumberPattern = '(?:[,@#:|(](\\d+)\\)?|)';
   const escapedDirectories: string[] = [];
-  const lineNumberPattern = '(?:[,@#:\|](\\d+)|)';
+  const lineNumberPattern = '(?:[,@#:|(](\\d+)\\)?|)';
   const result = {directories: [] as string[], file: null as string | null, regexp: null as RegExp | null};
   const validPathSegment = '[a-zA-Z0-9_\\-\\.\\/\\$\\(\\)]+(?:\\.[a-zA-Z0-9]+)*';
 
@@ -174,6 +174,31 @@ export function resolveFile(filePath: string, references: References): string[] 
     files.push(filePath);
   }
   return files;
+}
+
+export function resolveMatch(match: RegExpExecArray): {filePath: string, lineNumber: string | null, columnNumber: string | null} {
+  let filePath = match[1];
+  let lineNumber = match[2] || null;
+  let columnNumber = match[3] || null;
+
+  if(lineNumber === null && columnNumber === null) {
+    let match;
+
+    if((match = /^(.+)\((\d+)\)$/.exec(filePath)) !== null) {
+      filePath = match[1];
+      lineNumber = match[2];
+      columnNumber = null;
+    }
+  } else if (columnNumber === null) {
+    let match;
+
+    if((match = /^(.+)\((\d+)$/.exec(filePath)) !== null) {
+      columnNumber = lineNumber;
+      filePath = match[1];
+      lineNumber = match[2];
+    }
+  }
+  return {filePath, lineNumber, columnNumber};
 }
 
 /**
