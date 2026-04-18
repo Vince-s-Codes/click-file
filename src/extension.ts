@@ -4,7 +4,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { fixRemapDirectories, getDirectoryTitle, getFileTitle, getReferences, resolveFile, wildcardToRegex } from './utilities';
+import { fixRemapDirectories, getDirectoryTitle, getFileTitle, getReferences, resolveFile, resolveMatch, wildcardToRegex } from './utilities';
 import { openFilePathHandler, openExternalFilePathHandler } from './commands';
 
 export function activate(context: vscode.ExtensionContext) {
@@ -51,10 +51,8 @@ export function activate(context: vscode.ExtensionContext) {
       //console.log('click-file::', 'references', references);
       while(references.regexp !== null &&
             (match = references.regexp.exec(text)) !== null) {
-        const columnNumber = match[3];
-        const filePath = match[1];
+        const {filePath, lineNumber, columnNumber} = resolveMatch(match);
         const files: string[] = resolveFile(filePath, references);
-        const lineNumber = match[2];
         const resolvedFiles: string[] = [];
 
         //console.log('click-file::', 'files', files);
