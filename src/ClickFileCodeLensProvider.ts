@@ -10,12 +10,14 @@ export class ClickFileCodeLensProvider implements vscode.CodeLensProvider {
   private remapDirectories: Record<string, string[]>;
   private externalDirectories: any[];
   private externalFiles: any[];
+  private shouldProvideInternalFiles: boolean;
   private underlineDecoration: vscode.TextEditorDecorationType;
 
-  constructor(remapDirectories: Record<string, string[]>, externalDirectories: any[], externalFiles: any[]) {
+  constructor(remapDirectories: Record<string, string[]>, externalDirectories: any[], externalFiles: any[], shoulProvideInternalFiles: boolean) {
     this.remapDirectories = remapDirectories;
     this.externalDirectories = externalDirectories;
     this.externalFiles = externalFiles;
+    this.shouldProvideInternalFiles = shoulProvideInternalFiles;
     this.underlineDecoration = vscode.window.createTextEditorDecorationType({
       textDecoration: 'underline',
       color: new vscode.ThemeColor('editorLink.activeForeground')
@@ -74,7 +76,7 @@ export class ClickFileCodeLensProvider implements vscode.CodeLensProvider {
                 const fileName = path.basename(filePath);
                 const title = getFileTitle(filePath, lineNumber, columnNumber);
 
-                if (resolvedFile !== references.file || lineNumber) {
+                if (this.shouldProvideInternalFiles && (resolvedFile !== references.file || lineNumber)) {
                   const lens = new vscode.CodeLens(range, {
                     title: "$(go-to-file)Open",
                     tooltip: title,

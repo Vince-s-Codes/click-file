@@ -39,6 +39,12 @@
           "type": "object",
           "default": {},
           "description": "Remap part of the directory with another directory"
+        },
+        "click-file.linkStyle": {
+          "type": "string",
+          "enum": ["codelens", "documentlink"],
+          "default": "codelens",
+          "description": "Choose how file references should be displayed: as CodeLens buttons or as native document links"
         }
       }
     }
