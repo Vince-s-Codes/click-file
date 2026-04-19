@@ -1,4 +1,3 @@
-![Click-File Icon](media/icon.png)
 # Click-File
 
 This extension highlights file paths in your code and makes them clickable. You can open files directly in VS Code or use an external tool.
