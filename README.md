@@ -16,23 +16,34 @@ This extension detects file paths in your code, underlines them, and provides an
 
 ### Core Functionality
 - **File Path Detection**: Detects and underlines file paths in your code for visual feedback.
-- **CodeLens Actions**: Shows an **"Open"** button above detected file paths. Click the button to:
-  - Open the file in VS Code (at the specified line/column, if provided).
-  - Open the file with an external tool (e.g., image viewer, editor).
+- **Two Interaction Styles**: Choose between:
+  - **CodeLens Actions**: Shows an **"Open"** button above detected file paths
+  - **Native Document Links**: Makes file paths directly clickable in the editor
 - **Path Remapping**: Remap parts of directory paths to other locations (e.g., map `~` to `/home/user` or `/old/path` to `/new/path`).
+
+The extension provides two different ways to interact with file paths, configurable via the `click-file.linkStyle` setting.
 
 ### Configuration
 The extension provides several configuration options to customize its behavior:
 
-- **`click-file.externalFiles`**: Configure external tools to open specific file types or patterns.
-- **`click-file.externalDirectories`**: Configure external tools to open directories.
-- **`click-file.remapDirectories`**: Remap directory paths to other locations.
+- **`click-file.linkStyle`**: Choose how file references should be displayed (CodeLens buttons or native document links)
+- **`click-file.externalFiles`**: Configure external tools to open specific file types or patterns
+- **`click-file.externalDirectories`**: Configure external tools to open directories
+- **`click-file.remapDirectories`**: Remap directory paths to other locations
 
 See the [Extension Settings](#extension-settings) section for more details.
 
 ## Extension Settings
 
 This extension contributes the following settings:
+
+### `click-file.linkStyle`
+Choose how file references should be displayed:
+```json
+"click-file.linkStyle": "codelens"  // or "documentlink"
+```
+- `codelens`: Shows action buttons above file paths (default)
+- `documentlink`: Makes file paths directly clickable in the editor
 
 ### `click-file.externalFiles`
 Configure external tools to open files. Example:
