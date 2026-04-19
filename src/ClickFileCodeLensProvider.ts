@@ -19,8 +19,7 @@ export class ClickFileCodeLensProvider implements vscode.CodeLensProvider {
     this.externalFiles = externalFiles;
     this.shouldProvideInternalFiles = shoulProvideInternalFiles;
     this.underlineDecoration = vscode.window.createTextEditorDecorationType({
-      textDecoration: 'underline',
-      color: new vscode.ThemeColor('editorLink.activeForeground')
+      textDecoration: 'underline'
     });
   }
 
