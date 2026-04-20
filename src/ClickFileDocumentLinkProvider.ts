@@ -52,7 +52,8 @@ export class ClickFileDocumentLinkProvider implements vscode.DocumentLinkProvide
 
           if (fs.existsSync(finalFilePath)) {
             const resolvedFile = fs.realpathSync(finalFilePath);
-            if (!resolvedFiles.includes(resolvedFile) && match !== null) {
+
+            if (!resolvedFiles.includes(resolvedFile) && match !== null && fs.statSync(resolvedFile).isFile()) {
               const start = document.positionAt(match.index);
               const end = document.positionAt(match.index + match[0].length);
               const range = new vscode.Range(start, end);
