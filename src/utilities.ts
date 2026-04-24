@@ -109,7 +109,7 @@ export function getReferences(document: vscode.TextDocument): References {
   const result = {directories: [] as string[], file: null as string | null, regexp: null as RegExp | null};
   const validPathSegment = '[a-zA-Z0-9_\\-\\.\\/\\$\\(\\)]+(?:\\.[a-zA-Z0-9]+)*';
 
-  escapedDirectories.push('~');
+  escapedDirectories.push('~/');
   if(!document.isUntitled) {
     let currentDir = path.dirname(document.fileName);
 
@@ -139,7 +139,7 @@ export function getReferences(document: vscode.TextDocument): References {
   }
   const escapedDirContents = escapedDirectories.join('|');
 
-  result.regexp = new RegExp(`((?:${escapedDirContents}|/[a-zA-Z0-9_\\-\\.]+|\\$[a-zA-Z0-9_\\(\\)]+)(?:${validPathSegment}|))${lineNumberPattern}${columnNumberPattern}`, 'g');
+  result.regexp = new RegExp(`(?:[ '\`"\r\t\n:(){}\\[\\]<>*+-])((?:${escapedDirContents}|/[a-zA-Z0-9_\\-\\.]+|\\$[a-zA-Z0-9_\\(\\)]+)(?:${validPathSegment}|))${lineNumberPattern}${columnNumberPattern}`, 'g');
   return result;
 }
 
@@ -157,7 +157,7 @@ export function resolveFile(filePath: string, references: References): string[] 
   const files: string[] = [];
   const homeDir: string = require('os').homedir();
 
-  filePath = filePath.replace(/^~/, homeDir);
+  filePath = filePath.replace(/^~\//, homeDir + '/');
   filePath = filePath.replace(/\$(\w+)/g, (_, envVar: string): string => {
     return process.env[envVar] || _;
   });
