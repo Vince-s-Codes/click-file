@@ -65,7 +65,7 @@ export class ClickFileCodeLensProvider implements vscode.CodeLensProvider {
             resolvedFile = fs.realpathSync(finalFilePath);
             if (!resolvedFiles.includes(resolvedFile) && match !== null) {
               const count = lenses.length;
-              const start = document.positionAt(match.index);
+              const start = document.positionAt(match.index + 1);
               const end = document.positionAt(match.index + match[0].length);
               const range = new vscode.Range(start, end);
 
