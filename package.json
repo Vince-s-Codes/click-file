@@ -3,7 +3,7 @@
   "displayName": "click-file",
   "description": "Highlight file names in file and make it clickable to open the file",
   "publisher": "VincesCodes",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "engines": {
     "vscode": "^1.85.0"
   },
