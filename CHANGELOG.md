@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-06-01
+
+### Added
+
+- **Workspace Environment Variables**: Environment variables can now be resolved from workspace `.env` files (#15). The extension will automatically load environment variables from:
+  - `.vscode/.env` (priority)
+  - `.env` in the workspace root (fallback)
+- These variables are merged with `process.env`, with `process.env` taking precedence.
+
 ## [1.2.0] - 2026-04-24
 
 ### Fixed
