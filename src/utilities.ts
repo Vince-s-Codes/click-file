@@ -57,6 +57,7 @@ function parseEnvFile(content: string): Record<string, string> {
  * - First tries to load from .vscode/.env
  * - Falls back to .env in the workspace root
  * - Returns an empty object if no .env file is found
+ * - Replaces __WORKSPACE_ROOT__ placeholder with the actual workspace root directory
  *
  * @returns An object containing environment variables from the workspace .env file.
  */
@@ -73,7 +74,9 @@ function loadWorkspaceEnv(): Record<string, string> {
   try {
     if (fs.existsSync(vscodeEnvPath)) {
       const content = fs.readFileSync(vscodeEnvPath, 'utf8');
-      return parseEnvFile(content);
+      const env = parseEnvFile(content);
+      // Replace __WORKSPACE_ROOT__ placeholder with actual workspace root
+      return replaceWorkspaceRootPlaceholder(env, workspaceRoot);
     }
   } catch (error) {
     console.error('click-file:: Error reading .vscode/.env:', error);
@@ -84,13 +87,33 @@ function loadWorkspaceEnv(): Record<string, string> {
   try {
     if (fs.existsSync(rootEnvPath)) {
       const content = fs.readFileSync(rootEnvPath, 'utf8');
-      return parseEnvFile(content);
+      const env = parseEnvFile(content);
+      // Replace __WORKSPACE_ROOT__ placeholder with actual workspace root
+      return replaceWorkspaceRootPlaceholder(env, workspaceRoot);
     }
   } catch (error) {
     console.error('click-file:: Error reading .env:', error);
   }
 
   return {};
+}
+
+/**
+ * Replaces the __WORKSPACE_ROOT__ placeholder in environment variable values with the actual workspace root directory.
+ *
+ * @param env The environment variables object to process.
+ * @param workspaceRoot The workspace root directory path.
+ * @returns A new object with the placeholder replaced.
+ */
+function replaceWorkspaceRootPlaceholder(env: Record<string, string>, workspaceRoot: string): Record<string, string> {
+  const result: Record<string, string> = {};
+  const placeholder = '__WORKSPACE_ROOT__';
+
+  for (const [key, value] of Object.entries(env)) {
+    result[key] = value.replace(new RegExp(placeholder, 'g'), workspaceRoot);
+  }
+
+  return result;
 }
 
 /**

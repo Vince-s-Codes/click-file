@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `.vscode/.env` (priority)
   - `.env` in the workspace root (fallback)
 - These variables are merged with `process.env`, with `process.env` taking precedence.
+- Added support for `__WORKSPACE_ROOT__` placeholder in `.env` values, which gets replaced with the actual workspace root directory.
 
 ## [1.2.0] - 2026-04-24
 
