@@ -20,6 +20,7 @@ This extension detects file paths in your code, underlines them, and provides an
   - **CodeLens Actions**: Shows an **"Open"** button above detected file paths
   - **Native Document Links**: Makes file paths directly clickable in the editor
 - **Path Remapping**: Remap parts of directory paths to other locations (e.g., map `~` to `/home/user` or `/old/path` to `/new/path`).
+- **Workspace Environment Variables**: Resolves environment variables from workspace `.env` files (`.vscode/.env` or `.env` in workspace root), in addition to system environment variables.
 
 The extension provides two different ways to interact with file paths, configurable via the `click-file.linkStyle` setting.
 
@@ -87,3 +88,4 @@ Remap part of a directory path with another directory path. Example:
 ```
 - Keys: Directory paths to match (supports `~` for home directory and environment variables like `$HOME`).
 - Values: Array of replacement directory paths.
+- Environment variables are resolved from both system environment variables and workspace `.env` files (`.vscode/.env` or `.env` in workspace root).

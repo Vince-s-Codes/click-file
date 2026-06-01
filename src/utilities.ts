@@ -12,9 +12,91 @@ interface References {
 }
 
 /**
+ * Parses a .env file content and returns an object with environment variables.
+ * - Handles lines with KEY=value format.
+ * - Ignores comments (lines starting with #).
+ * - Trims whitespace from keys and values.
+ * - Skips empty lines and malformed entries.
+ *
+ * @param content The content of the .env file.
+ * @returns An object containing the parsed environment variables.
+ */
+function parseEnvFile(content: string): Record<string, string> {
+  const env: Record<string, string> = {};
+  const lines = content.split('\n');
+
+  for (const line of lines) {
+    // Skip empty lines and comments
+    const trimmedLine = line.trim();
+    if (!trimmedLine || trimmedLine.startsWith('#')) {
+      continue;
+    }
+
+    // Split on the first '=' character
+    const equalIndex = trimmedLine.indexOf('=');
+    if (equalIndex === -1) {
+      continue;
+    }
+
+    const key = trimmedLine.substring(0, equalIndex).trim();
+    const value = trimmedLine.substring(equalIndex + 1).trim();
+
+    // Remove surrounding quotes if present
+    const cleanValue = value.replace(/^['"]|['"]$/g, '');
+
+    if (key) {
+      env[key] = cleanValue;
+    }
+  }
+
+  return env;
+}
+
+/**
+ * Loads environment variables from workspace .env files.
+ * - First tries to load from .vscode/.env
+ * - Falls back to .env in the workspace root
+ * - Returns an empty object if no .env file is found
+ *
+ * @returns An object containing environment variables from the workspace .env file.
+ */
+function loadWorkspaceEnv(): Record<string, string> {
+  const workspaceFolders = vscode.workspace.workspaceFolders;
+  if (!workspaceFolders || workspaceFolders.length === 0) {
+    return {};
+  }
+
+  const workspaceRoot = workspaceFolders[0].uri.fsPath;
+
+  // Try .vscode/.env first
+  const vscodeEnvPath = path.join(workspaceRoot, '.vscode', '.env');
+  try {
+    if (fs.existsSync(vscodeEnvPath)) {
+      const content = fs.readFileSync(vscodeEnvPath, 'utf8');
+      return parseEnvFile(content);
+    }
+  } catch (error) {
+    console.error('click-file:: Error reading .vscode/.env:', error);
+  }
+
+  // Fall back to .env in workspace root
+  const rootEnvPath = path.join(workspaceRoot, '.env');
+  try {
+    if (fs.existsSync(rootEnvPath)) {
+      const content = fs.readFileSync(rootEnvPath, 'utf8');
+      return parseEnvFile(content);
+    }
+  } catch (error) {
+    console.error('click-file:: Error reading .env:', error);
+  }
+
+  return {};
+}
+
+/**
  * Processes directory remapping rules by expanding environment variables and the user's home directory.
  * - Replaces `~` with the user's home directory.
- * - Expands environment variables (e.g., `$HOME`, `$USERPROFILE`) to their actual values.
+ * - Expands environment variables (e.g., `$HOME`, `$USERPROFILE`) to their actual values from process.env and workspace .env files.
  * - Preserves the original keys if no expansion is needed.
  *
  * @param remapDirectories Object containing remapping rules where keys are path patterns to match
@@ -25,18 +107,28 @@ export function fixRemapDirectories(remapDirectories: Record<string, string[]>):
   const homeDir = require('os').homedir();
   const newRemapDirectories: Record<string, string[]> = {};
 
+  // Load workspace environment variables from .env files
+  const workspaceEnv = loadWorkspaceEnv();
+
+  // Merge workspace env with process.env, giving precedence to process.env
+  // Process.env can have undefined values, so we need to handle them
+  const env: Record<string, string | undefined> = {
+    ...workspaceEnv,
+    ...process.env
+  };
+
   Object.entries(remapDirectories).forEach(([key, values]) => {
     // Process key: replace ~ with home directory and expand env variables
     let processedKey = key.replace(/^~/, homeDir);
     processedKey = processedKey.replace(/\$(\w+)/g, (_, envVar: string) => {
-      return process.env[envVar] || _;
+      return (env[envVar] !== undefined ? env[envVar] : _) || _;
     });
 
     // Process values: replace ~ with home directory and expand env variables
     const processedValues = values.map((value: string) => {
       let processedValue = value.replace(/^~/, homeDir);
       processedValue = processedValue.replace(/\$(\w+)/g, (_, envVar: string) => {
-        return process.env[envVar] || _;
+        return (env[envVar] !== undefined ? env[envVar] : _) || _;
       });
       return processedValue;
     });
@@ -146,7 +238,7 @@ export function getReferences(document: vscode.TextDocument): References {
 /**
  * Resolves a file path to absolute paths, considering directory references and environment variables.
  * - Replaces `~` with the user's home directory.
- * - Expands environment variables (e.g., `$HOME`, `$USERPROFILE`).
+ * - Expands environment variables (e.g., `$HOME`, `$USERPROFILE`) from process.env and workspace .env files.
  * - Converts relative paths to absolute paths using directory references.
  *
  * @param filePath The file path to resolve.
@@ -157,12 +249,22 @@ export function resolveFile(filePath: string, references: References): string[] 
   const files: string[] = [];
   const homeDir: string = require('os').homedir();
 
+  // Load workspace environment variables from .env files
+  const workspaceEnv = loadWorkspaceEnv();
+
+  // Merge workspace env with process.env, giving precedence to process.env
+  // Process.env can have undefined values, so we need to handle them
+  const env: Record<string, string | undefined> = {
+    ...workspaceEnv,
+    ...process.env
+  };
+
   filePath = filePath.replace(/^~\//, homeDir + '/');
   filePath = filePath.replace(/\$(\w+)/g, (_, envVar: string): string => {
-    return process.env[envVar] || _;
+    return (env[envVar] !== undefined ? env[envVar] : _) || _;
   });
   filePath = filePath.replace(/\$env\((\w+)\)/g, (_, envVar: string): string => {
-    return process.env[envVar] || _;
+    return (env[envVar] !== undefined ? env[envVar] : _) || _;
   });
 
   // Convert to absolute path if it is not already
