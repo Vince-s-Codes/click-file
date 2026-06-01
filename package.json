@@ -45,6 +45,12 @@
           "enum": ["codelens", "documentlink"],
           "default": "codelens",
           "description": "Choose how file references should be displayed: as CodeLens buttons or as native document links"
+        },
+        "click-file.logLevel": {
+          "type": "string",
+          "enum": ["none", "error", "warning", "note", "debug"],
+          "default": "none",
+          "description": "Log level for click-file extension (none, error, warning, note, debug)"
         }
       }
     }

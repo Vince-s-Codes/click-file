@@ -4,6 +4,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
+import { error } from './log';
 
 interface References {
   directories: string[];
@@ -78,8 +79,8 @@ function loadWorkspaceEnv(): Record<string, string> {
       // Replace __WORKSPACE_ROOT__ placeholder with actual workspace root
       return replaceWorkspaceRootPlaceholder(env, workspaceRoot);
     }
-  } catch (error) {
-    console.error('click-file:: Error reading .vscode/.env:', error);
+  } catch (err) {
+    error('Error reading .vscode/.env:', err);
   }
 
   // Fall back to .env in workspace root
@@ -91,8 +92,8 @@ function loadWorkspaceEnv(): Record<string, string> {
       // Replace __WORKSPACE_ROOT__ placeholder with actual workspace root
       return replaceWorkspaceRootPlaceholder(env, workspaceRoot);
     }
-  } catch (error) {
-    console.error('click-file:: Error reading .env:', error);
+  } catch (err) {
+    error('Error reading .env:', err);
   }
 
   return {};
@@ -248,8 +249,8 @@ export function getReferences(document: vscode.TextDocument): References {
           }
         });
       }
-    } catch(error) {
-      console.error('click-file::', error);
+    } catch(err) {
+      error('Error in getReferences:', err);
     }
   }
   const escapedDirContents = escapedDirectories.join('|');

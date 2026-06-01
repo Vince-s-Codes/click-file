@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - These variables are merged with `process.env`, with `process.env` taking precedence.
 - Added support for `__WORKSPACE_ROOT__` placeholder in `.env` values, which gets replaced with the actual workspace root directory.
 
+### Changed
+
+- Added `click-file.logLevel` configuration setting for debugging.
+
 ## [1.2.0] - 2026-04-24
 
 ### Fixed

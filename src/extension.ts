@@ -6,13 +6,40 @@ import { fixRemapDirectories } from './utilities';
 import { openFilePathHandler, openExternalFilePathHandler } from './commands';
 import { ClickFileCodeLensProvider } from './ClickFileCodeLensProvider';
 import { ClickFileDocumentLinkProvider } from './ClickFileDocumentLinkProvider';
+import { setLogLevel, LogLevel, LogLevelType, debug, note, warning, error } from './log';
+
+// Map string log level to LogLevelType
+type LogLevelString = 'none' | 'error' | 'warning' | 'note' | 'debug';
+
+function stringToLogLevel(level: LogLevelString): LogLevelType {
+  switch (level) {
+    case 'none': return LogLevel.NONE;
+    case 'error': return LogLevel.ERROR;
+    case 'warning': return LogLevel.WARNING;
+    case 'note': return LogLevel.NOTE;
+    case 'debug': return LogLevel.DEBUG;
+    default: return LogLevel.NONE;
+  }
+}
+
+// Get current log level from configuration
+function getLogLevelConfig(): LogLevelType {
+  const config = vscode.workspace.getConfiguration('click-file');
+  const logLevel = config.get<LogLevelString>('logLevel', 'none');
+  return stringToLogLevel(logLevel);
+}
 
 export function activate(context: vscode.ExtensionContext) {
+  // Initialize log level
+  setLogLevel(getLogLevelConfig());
+
   const config = vscode.workspace.getConfiguration('click-file');
   let externalDirectories = config.get('externalDirectories', []);
   let externalFiles = config.get('externalFiles', []);
   let remapDirectories = fixRemapDirectories(config.get<Record<string, string[]>>('remapDirectories', {}));
   let linkStyle = config.get<'codelens' | 'documentlink'>('linkStyle', 'codelens');
+
+  debug(activate, 'Activating click-file extension');
 
   // Track providers so we can dispose and recreate them
   let codeLensProvider: vscode.Disposable | null = null;
@@ -62,6 +89,10 @@ export function activate(context: vscode.ExtensionContext) {
         linkStyle = newLinkStyle;
         updateProviders();
       }
+    }
+    if (event.affectsConfiguration('click-file.logLevel')) {
+      setLogLevel(getLogLevelConfig());
+      debug(activate, 'Log level updated');
     }
   });
   context.subscriptions.push(configWatcher);

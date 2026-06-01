@@ -31,6 +31,7 @@ The extension provides several configuration options to customize its behavior:
 - **`click-file.externalFiles`**: Configure external tools to open specific file types or patterns
 - **`click-file.externalDirectories`**: Configure external tools to open directories
 - **`click-file.remapDirectories`**: Remap directory paths to other locations
+- **`click-file.logLevel`**: Set the log level for debugging (none, error, warning, note, debug)
 
 See the [Extension Settings](#extension-settings) section for more details.
 
