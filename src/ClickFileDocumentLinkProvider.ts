@@ -3,7 +3,7 @@
 
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import { getReferences, resolveFile, resolveMatch, getFileTitle } from './utilities';
+import { getReferences, resolveFile, resolveMatch, getFileTitle, getDirectoryTitle } from './utilities';
 
 export class ClickFileDocumentLinkProvider implements vscode.DocumentLinkProvider {
   private remapDirectories: Record<string, string[]>;
@@ -55,22 +55,30 @@ export class ClickFileDocumentLinkProvider implements vscode.DocumentLinkProvide
 
             if (!resolvedFiles.includes(resolvedFile) &&
                 match !== null &&
-                (resolvedFile !== references.file || lineNumber) &&
-                fs.statSync(resolvedFile).isFile()) {
+                (resolvedFile !== references.file || lineNumber)) {
               const start = document.positionAt(match.index + 1);
               const end = document.positionAt(match.index + match[0].length);
               const range = new vscode.Range(start, end);
 
               resolvedFiles.push(resolvedFile);
 
-              // Create document link for the file
-              const targetUri = vscode.Uri.file(resolvedFile).with({
-                fragment: lineNumber ? `L${lineNumber}${columnNumber ? `,${columnNumber}` : ''}` : ''
-              });
+              if (fs.statSync(resolvedFile).isFile()) {
+                // Create document link for the file
+                const targetUri = vscode.Uri.file(resolvedFile).with({
+                  fragment: lineNumber ? `L${lineNumber}${columnNumber ? `,${columnNumber}` : ''}` : ''
+                });
 
-              const link = new vscode.DocumentLink(range, targetUri);
-              link.tooltip = getFileTitle(filePath, lineNumber, columnNumber);
-              links.push(link);
+                const link = new vscode.DocumentLink(range, targetUri);
+                link.tooltip = getFileTitle(filePath, lineNumber, columnNumber);
+                links.push(link);
+              } else if (fs.statSync(resolvedFile).isDirectory()) {
+                // Create document link for the directory
+                const targetUri = vscode.Uri.file(resolvedFile);
+
+                const link = new vscode.DocumentLink(range, targetUri);
+                link.tooltip = getDirectoryTitle(filePath);
+                links.push(link);
+              }
             }
           }
         } catch (error) {
