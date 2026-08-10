@@ -15,7 +15,7 @@ export function openFilePathHandler(filePath: string, lineNumber: number, column
     try {
       if (fs.existsSync(filePath)) {
         const stats = fs.statSync(filePath);
-        
+
         if (stats.isDirectory()) {
           // Handle directory: reveal in VS Code Explorer
           // Use internal VS Code command to reveal directory in sidebar

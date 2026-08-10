@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Include Paths Support**: Added `click-file.includePaths` configuration option to specify additional directories to search for files when resolving relative paths (#17).
+  - Particularly useful for C/C++ development where header files may be located in include directories (e.g., `#include "file.h"` where `file.h` is in a directory specified in `includePaths`).
+  - Supports `~` for home directory expansion.
+  - Supports environment variables (e.g., `$HOME`, `$USERPROFILE`) and workspace `.env` files.
+  - Supports `__WORKSPACE_ROOT__` placeholder in `.env` values.
+  - Works with both CodeLens and DocumentLink styles.
+
 - **Directory Path Support**: Directory paths are now detected and can be opened/revealed in VS Code Explorer (#17)
   - ClickFileDocumentLinkProvider now creates DocumentLinks for directories
   - ClickFileCodeLensProvider now provides "Open" CodeLens for directories

@@ -22,6 +22,7 @@ This extension detects file and directory paths in your code, underlines them, a
   - **Native Document Links**: Makes file paths directly clickable in the editor
 - **Path Remapping**: Remap parts of directory paths to other locations (e.g., map `~` to `/home/user` or `/old/path` to `/new/path`).
 - **Workspace Environment Variables**: Resolves environment variables from workspace `.env` files (`.vscode/.env` or `.env` in workspace root), in addition to system environment variables. Supports `__WORKSPACE_ROOT__` placeholder in `.env` values, which is automatically replaced with the workspace root directory.
+- **Include Paths**: Add additional directories to search for files when resolving relative paths. This is particularly useful for C/C++ development where header files may be located in include directories (e.g., `#include "file.h"` where `file.h` is in a directory specified in `includePaths`).
 
 The extension provides two different ways to interact with file paths, configurable via the `click-file.linkStyle` setting.
 
@@ -32,6 +33,7 @@ The extension provides several configuration options to customize its behavior:
 - **`click-file.externalFiles`**: Configure external tools to open specific file types or patterns
 - **`click-file.externalDirectories`**: Configure external tools to open directories
 - **`click-file.remapDirectories`**: Remap directory paths to other locations
+- **`click-file.includePaths`**: Add additional directories to search for files when resolving relative paths
 - **`click-file.logLevel`**: Set the log level for debugging (none, error, warning, note, debug)
 
 See the [Extension Settings](#extension-settings) section for more details.
@@ -91,4 +93,19 @@ Remap part of a directory path with another directory path. Example:
 - Keys: Directory paths to match (supports `~` for home directory and environment variables like `$HOME`).
 - Values: Array of replacement directory paths.
 - Environment variables are resolved from both system environment variables and workspace `.env` files (`.vscode/.env` or `.env` in workspace root).
- from both system environment variables and workspace `.env` files (`.vscode/.env` or `.env` in workspace root).
+
+### `click-file.includePaths`
+Add additional directories to search for files when resolving relative paths. This is particularly useful for C/C++ development where header files may be located in include directories. Example:
+```json
+"click-file.includePaths": [
+  "/usr/local/include",
+  "/usr/include",
+  "${workspaceFolder}/include",
+  "~/.local/include"
+]
+```
+- Each entry is a directory path where the extension will look for files.
+- Supports `~` for home directory expansion.
+- Supports environment variables (e.g., `$HOME`, `$WORKSPACE`).
+- Supports workspace variables (e.g., `${workspaceFolder}` - note: use the actual workspace path or environment variables for best results).
+- Environment variables are resolved from both system environment variables and workspace `.env` files (`.vscode/.env` or `.env` in workspace root).

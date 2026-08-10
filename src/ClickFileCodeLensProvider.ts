@@ -4,20 +4,22 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { getReferences, resolveFile, resolveMatch, wildcardToRegex, getFileTitle, getDirectoryTitle } from './utilities';
+import { getReferences, resolveFile, resolveMatch, wildcardToRegex, getFileTitle, getDirectoryTitle, fixIncludePaths } from './utilities';
 
 export class ClickFileCodeLensProvider implements vscode.CodeLensProvider {
   private remapDirectories: Record<string, string[]>;
   private externalDirectories: any[];
   private externalFiles: any[];
   private shouldProvideInternalFiles: boolean;
+  private includePaths: string[];
   private underlineDecoration: vscode.TextEditorDecorationType;
 
-  constructor(remapDirectories: Record<string, string[]>, externalDirectories: any[], externalFiles: any[], shoulProvideInternalFiles: boolean) {
+  constructor(remapDirectories: Record<string, string[]>, externalDirectories: any[], externalFiles: any[], shoulProvideInternalFiles: boolean, includePaths: string[] = []) {
     this.remapDirectories = remapDirectories;
     this.externalDirectories = externalDirectories;
     this.externalFiles = externalFiles;
     this.shouldProvideInternalFiles = shoulProvideInternalFiles;
+    this.includePaths = fixIncludePaths(includePaths);
     this.underlineDecoration = vscode.window.createTextEditorDecorationType({
       textDecoration: 'underline'
     });
@@ -28,7 +30,7 @@ export class ClickFileCodeLensProvider implements vscode.CodeLensProvider {
     const editor = vscode.window.activeTextEditor;
     const lenses: vscode.CodeLens[] = [];
     let match: RegExpExecArray | null;
-    const references = getReferences(document);
+    const references = getReferences(document, this.includePaths);
     const text = document.getText();
 
     while (references.regexp !== null && (match = references.regexp.exec(text)) !== null) {
