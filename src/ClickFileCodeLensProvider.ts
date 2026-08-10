@@ -101,6 +101,18 @@ export class ClickFileCodeLensProvider implements vscode.CodeLensProvider {
                 });
               } else if (fs.statSync(resolvedFile).isDirectory()) {
                 const directoryName = path.basename(filePath);
+                const title = getDirectoryTitle(filePath);
+
+                // Add internal "Open" lens for directories to reveal in VS Code Explorer
+                if (this.shouldProvideInternalFiles) {
+                  const lens = new vscode.CodeLens(range, {
+                    title: "$(folder-opened)Open",
+                    tooltip: title,
+                    command: 'click-file.openFilePath',
+                    arguments: [resolvedFile, 0, undefined]
+                  });
+                  lenses.push(lens);
+                }
 
                 this.externalDirectories.forEach((cmd: { tool: string, command: string, patterns: string[] }) => {
                   if (cmd.patterns === undefined ||

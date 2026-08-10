@@ -4,13 +4,14 @@ This extension highlights file paths in your code and makes them clickable. You 
 
 ## Features
 
-This extension detects file paths in your code, underlines them, and provides an **"Open"** button via CodeLens. It supports the following file path formats:
+This extension detects file and directory paths in your code, underlines them, and provides an **"Open"** button via CodeLens. It supports the following path formats:
 
-- Absolute paths: `/path/to/file.txt`
-- Relative paths: `./relative/path/file.txt` or `../parent/path/file.txt`
-- Paths with environment variables: `$HOME/file.txt` or `~/file.txt`
+- Absolute paths: `/path/to/file.txt` or `/path/to/directory`
+- Relative paths: `./relative/path/file.txt`, `../parent/path/directory` or `./relative/path`
+- Paths with environment variables: `$HOME/file.txt`, `~/file.txt`, `$HOME/directory`, or `~/directory`
 - Paths with line numbers: `file.txt:42`, `file.txt@42`, `file.txt#42`, `file.txt,42`, or `file.txt|42`
 - Paths with line and column numbers: `file.txt:42:1`, `file.txt@42@1`, `file.txt#42#1`, `file.txt,42,1`, or `file.txt|42|1`
+- Directory paths: `/path/to/directory`, `./my-folder`, `../parent/dir`
 
 ![Example](media/example.png)
 
@@ -27,7 +28,7 @@ The extension provides two different ways to interact with file paths, configura
 ### Configuration
 The extension provides several configuration options to customize its behavior:
 
-- **`click-file.linkStyle`**: Choose how file references should be displayed (CodeLens buttons or native document links)
+- **`click-file.linkStyle`**: Choose how file/directory references should be displayed (CodeLens buttons or native document links)
 - **`click-file.externalFiles`**: Configure external tools to open specific file types or patterns
 - **`click-file.externalDirectories`**: Configure external tools to open directories
 - **`click-file.remapDirectories`**: Remap directory paths to other locations
@@ -90,3 +91,4 @@ Remap part of a directory path with another directory path. Example:
 - Keys: Directory paths to match (supports `~` for home directory and environment variables like `$HOME`).
 - Values: Array of replacement directory paths.
 - Environment variables are resolved from both system environment variables and workspace `.env` files (`.vscode/.env` or `.env` in workspace root).
+ from both system environment variables and workspace `.env` files (`.vscode/.env` or `.env` in workspace root).

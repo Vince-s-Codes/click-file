@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-08-10
+
+### Added
+
+- **Directory Path Support**: Directory paths are now detected and can be opened/revealed in VS Code Explorer (#17)
+  - ClickFileDocumentLinkProvider now creates DocumentLinks for directories
+  - ClickFileCodeLensProvider now provides "Open" CodeLens for directories
+  - Added directory handling in `openFilePathHandler` to reveal directories in VS Code Explorer
+  - Uses internal VS Code command `_workbench.action.files.revealInExplorer` to reveal directories
+
+### Fixed
+
+- DocumentLinks and CodeLens now properly handle both files and directories
+
 ## [1.3.0] - 2026-06-01
 
 ### Added
