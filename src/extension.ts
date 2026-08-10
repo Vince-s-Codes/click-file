@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import * as vscode from 'vscode';
-import { fixRemapDirectories } from './utilities';
+import { fixRemapDirectories, fixIncludePaths } from './utilities';
 import { openFilePathHandler, openExternalFilePathHandler } from './commands';
 import { ClickFileCodeLensProvider } from './ClickFileCodeLensProvider';
 import { ClickFileDocumentLinkProvider } from './ClickFileDocumentLinkProvider';
@@ -37,6 +37,7 @@ export function activate(context: vscode.ExtensionContext) {
   let externalDirectories = config.get('externalDirectories', []);
   let externalFiles = config.get('externalFiles', []);
   let remapDirectories = fixRemapDirectories(config.get<Record<string, string[]>>('remapDirectories', {}));
+  let includePaths = fixIncludePaths(config.get<string[]>('includePaths', []));
   let linkStyle = config.get<'codelens' | 'documentlink'>('linkStyle', 'codelens');
 
   debug(activate, 'Activating click-file extension');
@@ -59,13 +60,13 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Register the appropriate provider
     codeLensProvider = vscode.languages.registerCodeLensProvider('*',
-      new ClickFileCodeLensProvider(remapDirectories, externalDirectories, externalFiles, linkStyle === 'codelens')
+      new ClickFileCodeLensProvider(remapDirectories, externalDirectories, externalFiles, linkStyle === 'codelens', includePaths)
     );
     context.subscriptions.push(codeLensProvider);
     if (linkStyle === 'documentlink') {
       documentLinkProvider = vscode.languages.registerDocumentLinkProvider(
         '*',
-        new ClickFileDocumentLinkProvider(remapDirectories)
+        new ClickFileDocumentLinkProvider(remapDirectories, includePaths)
       );
       context.subscriptions.push(documentLinkProvider);
     }
@@ -82,6 +83,10 @@ export function activate(context: vscode.ExtensionContext) {
     }
     if (event.affectsConfiguration('click-file.remapDirectories')) {
       remapDirectories = fixRemapDirectories(config.get<Record<string, string[]>>('remapDirectories', {}));
+    }
+    if (event.affectsConfiguration('click-file.includePaths')) {
+      includePaths = fixIncludePaths(config.get<string[]>('includePaths', []));
+      updateProviders();
     }
     if (event.affectsConfiguration('click-file.linkStyle')) {
       const newLinkStyle = config.get<'codelens' | 'documentlink'>('linkStyle', 'codelens');

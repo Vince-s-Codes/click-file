@@ -187,6 +187,42 @@ export function getDirectoryTitle(directory: string, tool?: string): string {
 }
 
 /**
+ * Processes includePaths by expanding environment variables and the user's home directory.
+ * - Replaces `~` with the user's home directory.
+ * - Expands environment variables (e.g., `$HOME`, `$USERPROFILE`) to their actual values from process.env and workspace .env files.
+ *
+ * @param includePaths Array of directory paths to process.
+ * @returns A new array with processed paths, where environment variables and `~` are expanded.
+ */
+export function fixIncludePaths(includePaths: string[]): string[] {
+  const homeDir = require('os').homedir();
+  const processedPaths: string[] = [];
+
+  // Load workspace environment variables from .env files
+  const workspaceEnv = loadWorkspaceEnv();
+
+  // Merge workspace env with process.env, giving precedence to process.env
+  const env: Record<string, string | undefined> = {
+    ...workspaceEnv,
+    ...process.env
+  };
+
+  for (const includePath of includePaths) {
+    // Process path: replace ~ with home directory and expand env variables
+    let processedPath = includePath.replace(/^~/, homeDir);
+    processedPath = processedPath.replace(/\$(\w+)/g, (_, envVar: string) => {
+      return (env[envVar] !== undefined ? env[envVar] : _) || _;
+    });
+    processedPath = processedPath.replace(/\$env\((\w+)\)/g, (_, envVar: string): string => {
+      return (env[envVar] !== undefined ? env[envVar] : _) || _;
+    });
+    processedPaths.push(processedPath);
+  }
+
+  return processedPaths;
+}
+
+/**
  * Generates a title for opening a file, optionally at a specific line and column, and with a specific tool.
  *
  * @param file The file path to open.
@@ -216,9 +252,10 @@ export function getFileTitle(file: string, lineNumber?: string|null, columnNumbe
  * - Builds a regex pattern to match paths, line numbers, and column numbers in the document.
  *
  * @param document The document to analyze.
+ * @param includePaths Optional additional directories to include in path resolution (e.g., include paths for C/C++ headers).
  * @returns An object containing directories, file path, and a regex pattern for matching references.
  */
-export function getReferences(document: vscode.TextDocument): References {
+export function getReferences(document: vscode.TextDocument, includePaths: string[] = []): References {
   const columnNumberPattern = '(?:[,@#:|(](\\d+)\\)?|)';
   const escapedDirectories: string[] = [];
   const lineNumberPattern = '(?:[,@#:|(](\\d+)\\)?|)';
@@ -249,10 +286,23 @@ export function getReferences(document: vscode.TextDocument): References {
           }
         });
       }
+
+      // Add includePaths directories to the directories list for path resolution
+      for (const includePath of includePaths) {
+        if (!result.directories.includes(includePath)) {
+          result.directories.push(includePath);
+          fs.readdirSync(includePath).map(item => item.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).forEach(elt => {
+            if(!escapedDirectories.includes(elt)) {
+              escapedDirectories.push(elt);
+            }
+          });
+        }
+      }
     } catch(err) {
       error('Error in getReferences:', err);
     }
   }
+
   const escapedDirContents = escapedDirectories.join('|');
 
   result.regexp = new RegExp(`(?:[ '\`"\r\t\n:(){}\\[\\]<>*+-])((?:${escapedDirContents}|/[a-zA-Z0-9_\\-\\.]+|\\$[a-zA-Z0-9_\\(\\)]+)(?:${validPathSegment}|))${lineNumberPattern}${columnNumberPattern}`, 'g');
