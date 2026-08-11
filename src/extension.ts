@@ -8,9 +8,6 @@ import { ClickFileCodeLensProvider } from './ClickFileCodeLensProvider';
 import { ClickFileDocumentLinkProvider } from './ClickFileDocumentLinkProvider';
 import { setLogLevel, LogLevel, LogLevelType, debug, note, warning, error } from './log';
 
-// Registry for dynamic include path providers
-const includePathProviders = new Set<IncludePathProvider>();
-
 // Map string log level to LogLevelType
 type LogLevelString = 'none' | 'error' | 'warning' | 'note' | 'debug';
 
@@ -30,6 +27,53 @@ function getLogLevelConfig(): LogLevelType {
   const config = vscode.workspace.getConfiguration('click-file');
   const logLevel = config.get<LogLevelString>('logLevel', 'none');
   return stringToLogLevel(logLevel);
+}
+
+// Type for the update function that can be called when providers change
+type UpdateProvidersFunction = () => void;
+
+// Global registry for dynamic include path providers
+const includePathProviders = new Set<IncludePathProvider>();
+
+// Reference to the updateProviders function (set during activation)
+let updateProvidersRef: UpdateProvidersFunction | null = null;
+
+/**
+ * Register a callback to provide dynamic include paths based on the current document.
+ * The callback receives the current document and should return an array of include paths.
+ *
+ * @param provider A callback function that takes a vscode.TextDocument and returns string[] or Promise<string[]>.
+ * @returns A disposable that can be used to unregister the provider.
+ */
+export function registerIncludePathProvider(provider: IncludePathProvider): vscode.Disposable {
+  includePathProviders.add(provider);
+  debug(registerIncludePathProvider, 'Registered new IncludePathProvider');
+  // Trigger update of providers if updateProvidersRef is available
+  if (updateProvidersRef) {
+    updateProvidersRef();
+  }
+  return new vscode.Disposable(() => {
+    includePathProviders.delete(provider);
+    debug(registerIncludePathProvider, 'Unregistered IncludePathProvider');
+    // Trigger update of providers when unregistered
+    if (updateProvidersRef) {
+      updateProvidersRef();
+    }
+  });
+}
+
+/**
+ * Unregister a previously registered include path provider.
+ *
+ * @param provider The callback function to unregister.
+ */
+export function unregisterIncludePathProvider(provider: IncludePathProvider): void {
+  includePathProviders.delete(provider);
+  debug(unregisterIncludePathProvider, 'Unregistered IncludePathProvider');
+  // Trigger update of providers if updateProvidersRef is available
+  if (updateProvidersRef) {
+    updateProvidersRef();
+  }
 }
 
 export function activate(context: vscode.ExtensionContext) {
@@ -114,6 +158,9 @@ export function activate(context: vscode.ExtensionContext) {
   const clickExternalFile = vscode.commands.registerCommand('click-file.openExternalFilePath', openExternalFilePathHandler);
   context.subscriptions.push(clickExternalFile);
 
+  // Set the updateProvidersRef so that registration/unregistration can trigger updates
+  updateProvidersRef = updateProviders;
+
   // Initialize providers
   updateProviders();
 
@@ -130,30 +177,7 @@ export function activate(context: vscode.ExtensionContext) {
   return api;
 }
 
-/**
- * Register a callback to provide dynamic include paths based on the current document.
- * The callback receives the current document and should return an array of include paths.
- *
- * @param provider A callback function that takes a vscode.TextDocument and returns string[] or Promise<string[]>.
- * @returns A disposable that can be used to unregister the provider.
- */
-export function registerIncludePathProvider(provider: IncludePathProvider): vscode.Disposable {
-  includePathProviders.add(provider);
-  debug(registerIncludePathProvider, 'Registered new IncludePathProvider');
-  return new vscode.Disposable(() => {
-    includePathProviders.delete(provider);
-    debug(registerIncludePathProvider, 'Unregistered IncludePathProvider');
-  });
+export function deactivate() {
+  // Clear the updateProvidersRef on deactivation
+  updateProvidersRef = null;
 }
-
-/**
- * Unregister a previously registered include path provider.
- *
- * @param provider The callback function to unregister.
- */
-export function unregisterIncludePathProvider(provider: IncludePathProvider): void {
-  includePathProviders.delete(provider);
-  debug(unregisterIncludePathProvider, 'Unregistered IncludePathProvider');
-}
-
-export function deactivate() {}
