@@ -7,10 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.4.0] - 2026-08-10
+## [1.4.0] - 2026-08-11
 
 ### Added
 
+- **API Support**: Added public API for programmatic access to path resolution and file opening functionality (#22).
 - **Include Paths Support**: Added `click-file.includePaths` configuration option to specify additional directories to search for files when resolving relative paths (#17).
   - Particularly useful for C/C++ development where header files may be located in include directories (e.g., `#include "file.h"` where `file.h` is in a directory specified in `includePaths`).
   - Supports `~` for home directory expansion.
