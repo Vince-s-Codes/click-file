@@ -3,23 +3,29 @@
 
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import { getReferences, resolveFile, resolveMatch, getFileTitle, getDirectoryTitle, fixIncludePaths } from './utilities';
+import { getReferences, resolveFile, resolveMatch, getFileTitle, getDirectoryTitle, fixIncludePaths, IncludePathProvider } from './utilities';
 
 export class ClickFileDocumentLinkProvider implements vscode.DocumentLinkProvider {
   private remapDirectories: Record<string, string[]>;
   private includePaths: string[];
+  private providers: IncludePathProvider[];
 
-  constructor(remapDirectories: Record<string, string[]>, includePaths: string[] = []) {
+  constructor(
+    remapDirectories: Record<string, string[]>,
+    includePaths: string[] = [],
+    providers: IncludePathProvider[] = []
+  ) {
     this.remapDirectories = remapDirectories;
     this.includePaths = fixIncludePaths(includePaths);
+    this.providers = providers;
   }
 
-  provideDocumentLinks(
+  async provideDocumentLinks(
     document: vscode.TextDocument,
     _token: vscode.CancellationToken
-  ): vscode.ProviderResult<vscode.DocumentLink[]> {
+  ): Promise<vscode.DocumentLink[]> {
     const links: vscode.DocumentLink[] = [];
-    const references = getReferences(document, this.includePaths);
+    const references = await getReferences(document, this.includePaths, this.providers);
     const text = document.getText();
     let match: RegExpExecArray | null;
 

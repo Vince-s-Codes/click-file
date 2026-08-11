@@ -4,7 +4,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { getReferences, resolveFile, resolveMatch, wildcardToRegex, getFileTitle, getDirectoryTitle, fixIncludePaths } from './utilities';
+import { getReferences, resolveFile, resolveMatch, wildcardToRegex, getFileTitle, getDirectoryTitle, fixIncludePaths, IncludePathProvider } from './utilities';
 
 export class ClickFileCodeLensProvider implements vscode.CodeLensProvider {
   private remapDirectories: Record<string, string[]>;
@@ -12,25 +12,34 @@ export class ClickFileCodeLensProvider implements vscode.CodeLensProvider {
   private externalFiles: any[];
   private shouldProvideInternalFiles: boolean;
   private includePaths: string[];
+  private providers: IncludePathProvider[];
   private underlineDecoration: vscode.TextEditorDecorationType;
 
-  constructor(remapDirectories: Record<string, string[]>, externalDirectories: any[], externalFiles: any[], shoulProvideInternalFiles: boolean, includePaths: string[] = []) {
+  constructor(
+    remapDirectories: Record<string, string[]>,
+    externalDirectories: any[],
+    externalFiles: any[],
+    shoulProvideInternalFiles: boolean,
+    includePaths: string[] = [],
+    providers: IncludePathProvider[] = []
+  ) {
     this.remapDirectories = remapDirectories;
     this.externalDirectories = externalDirectories;
     this.externalFiles = externalFiles;
     this.shouldProvideInternalFiles = shoulProvideInternalFiles;
     this.includePaths = fixIncludePaths(includePaths);
+    this.providers = providers;
     this.underlineDecoration = vscode.window.createTextEditorDecorationType({
       textDecoration: 'underline'
     });
   }
 
-  provideCodeLenses(document: vscode.TextDocument): vscode.CodeLens[] {
+  async provideCodeLenses(document: vscode.TextDocument): Promise<vscode.CodeLens[]> {
     const decorationRanges: vscode.Range[] = [];
     const editor = vscode.window.activeTextEditor;
     const lenses: vscode.CodeLens[] = [];
     let match: RegExpExecArray | null;
-    const references = getReferences(document, this.includePaths);
+    const references = await getReferences(document, this.includePaths, this.providers);
     const text = document.getText();
 
     while (references.regexp !== null && (match = references.regexp.exec(text)) !== null) {

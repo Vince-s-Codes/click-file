@@ -2,11 +2,14 @@
 // SPDX-License-Identifier: MIT
 
 import * as vscode from 'vscode';
-import { fixRemapDirectories, fixIncludePaths } from './utilities';
+import { fixRemapDirectories, fixIncludePaths, IncludePathProvider } from './utilities';
 import { openFilePathHandler, openExternalFilePathHandler } from './commands';
 import { ClickFileCodeLensProvider } from './ClickFileCodeLensProvider';
 import { ClickFileDocumentLinkProvider } from './ClickFileDocumentLinkProvider';
 import { setLogLevel, LogLevel, LogLevelType, debug, note, warning, error } from './log';
+
+// Registry for dynamic include path providers
+const includePathProviders = new Set<IncludePathProvider>();
 
 // Map string log level to LogLevelType
 type LogLevelString = 'none' | 'error' | 'warning' | 'note' | 'debug';
@@ -58,15 +61,18 @@ export function activate(context: vscode.ExtensionContext) {
       documentLinkProvider = null;
     }
 
+    // Convert Set to Array for passing to providers
+    const providersArray = Array.from(includePathProviders);
+
     // Register the appropriate provider
     codeLensProvider = vscode.languages.registerCodeLensProvider('*',
-      new ClickFileCodeLensProvider(remapDirectories, externalDirectories, externalFiles, linkStyle === 'codelens', includePaths)
+      new ClickFileCodeLensProvider(remapDirectories, externalDirectories, externalFiles, linkStyle === 'codelens', includePaths, providersArray)
     );
     context.subscriptions.push(codeLensProvider);
     if (linkStyle === 'documentlink') {
       documentLinkProvider = vscode.languages.registerDocumentLinkProvider(
         '*',
-        new ClickFileDocumentLinkProvider(remapDirectories, includePaths)
+        new ClickFileDocumentLinkProvider(remapDirectories, includePaths, providersArray)
       );
       context.subscriptions.push(documentLinkProvider);
     }
@@ -110,6 +116,44 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Initialize providers
   updateProviders();
+
+  // Register API functions for external extensions
+  const api = {
+    registerIncludePathProvider,
+    unregisterIncludePathProvider,
+    get includePathProviders() {
+      return Array.from(includePathProviders);
+    }
+  };
+
+  debug(activate, 'Click-File API registered');
+  return api;
+}
+
+/**
+ * Register a callback to provide dynamic include paths based on the current document.
+ * The callback receives the current document and should return an array of include paths.
+ *
+ * @param provider A callback function that takes a vscode.TextDocument and returns string[] or Promise<string[]>.
+ * @returns A disposable that can be used to unregister the provider.
+ */
+export function registerIncludePathProvider(provider: IncludePathProvider): vscode.Disposable {
+  includePathProviders.add(provider);
+  debug(registerIncludePathProvider, 'Registered new IncludePathProvider');
+  return new vscode.Disposable(() => {
+    includePathProviders.delete(provider);
+    debug(registerIncludePathProvider, 'Unregistered IncludePathProvider');
+  });
+}
+
+/**
+ * Unregister a previously registered include path provider.
+ *
+ * @param provider The callback function to unregister.
+ */
+export function unregisterIncludePathProvider(provider: IncludePathProvider): void {
+  includePathProviders.delete(provider);
+  debug(unregisterIncludePathProvider, 'Unregistered IncludePathProvider');
 }
 
 export function deactivate() {}
