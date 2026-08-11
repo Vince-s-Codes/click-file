@@ -13,6 +13,13 @@ interface References {
 }
 
 /**
+ * Callback type for dynamic include path providers.
+ * External extensions can register these to provide additional include paths
+ * based on the current document being analyzed.
+ */
+export type IncludePathProvider = (document: vscode.TextDocument) => string[] | Promise<string[]>;
+
+/**
  * Parses a .env file content and returns an object with environment variables.
  * - Handles lines with KEY=value format.
  * - Ignores comments (lines starting with #).
@@ -255,12 +262,30 @@ export function getFileTitle(file: string, lineNumber?: string|null, columnNumbe
  * @param includePaths Optional additional directories to include in path resolution (e.g., include paths for C/C++ headers).
  * @returns An object containing directories, file path, and a regex pattern for matching references.
  */
-export function getReferences(document: vscode.TextDocument, includePaths: string[] = []): References {
+export async function getReferences(
+  document: vscode.TextDocument,
+  includePaths: string[] = [],
+  providers: IncludePathProvider[] = []
+): Promise<References> {
   const columnNumberPattern = '(?:[,@#:|(](\\d+)\\)?|)';
   const escapedDirectories: string[] = [];
   const lineNumberPattern = '(?:[,@#:|(](\\d+)\\)?|)';
   const result = {directories: [] as string[], file: null as string | null, regexp: null as RegExp | null};
   const validPathSegment = '[a-zA-Z0-9_\\-\\.\\/\\$\\(\\)]+(?:\\.[a-zA-Z0-9]+)*';
+
+  // Collect dynamic include paths from registered providers
+  const dynamicIncludePaths: string[] = [];
+  for (const provider of providers) {
+    try {
+      const paths = await provider(document);
+      dynamicIncludePaths.push(...paths);
+    } catch (err) {
+      error('Error executing IncludePathProvider:', err);
+    }
+  }
+
+  // Merge static and dynamic include paths
+  const allIncludePaths = [...includePaths, ...dynamicIncludePaths];
 
   escapedDirectories.push('~/');
   if(!document.isUntitled) {
@@ -287,15 +312,20 @@ export function getReferences(document: vscode.TextDocument, includePaths: strin
         });
       }
 
-      // Add includePaths directories to the directories list for path resolution
-      for (const includePath of includePaths) {
+      // Add all includePaths (static + dynamic) directories to the directories list for path resolution
+      for (const includePath of allIncludePaths) {
         if (!result.directories.includes(includePath)) {
           result.directories.push(includePath);
-          fs.readdirSync(includePath).map(item => item.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).forEach(elt => {
-            if(!escapedDirectories.includes(elt)) {
-              escapedDirectories.push(elt);
-            }
-          });
+          try {
+            fs.readdirSync(includePath).map(item => item.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).forEach(elt => {
+              if(!escapedDirectories.includes(elt)) {
+                escapedDirectories.push(elt);
+              }
+            });
+          } catch (err) {
+            // Include path directory might not exist or be inaccessible, skip it
+            error(`Error reading include path directory: ${includePath}`, err);
+          }
         }
       }
     } catch(err) {
